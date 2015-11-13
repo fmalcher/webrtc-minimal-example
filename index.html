@@ -7,27 +7,182 @@
 
 <body>
 <script>
-var myName = null;
+var me = null;
+var partner = null;
+var pc = null;
 
-var conn = new WebSocket('ws://10.26.180.210:1337');
+var ice = false;
+var iceBuffer = [];
+
+var constraints = {
+    audio: true,
+    video: true
+};
+
+var conn = new WebSocket('ws://10.26.6.50:1337');
 
 //handler for incoming messages
 conn.onmessage = function(msg){
     var data = JSON.parse(msg.data);
+    //console.log('Received:', data);
     switch(data.body.type){
-        case 'invitation': handleInvite(data.from); break;
+        case 'invitation': handleInvite(data); break;
+        case 'accepted': handleAccepted(data); break;
+        case 'icecandidate': handleIceCandidate(data); break;
     }
 }
 
-function handleInvite(from){
-    console.log('got invite from', from);
+
+function createPC(){
+    pc = new RTCPeerConnection();
+    pc.onaddstream = function(obj){
+        console.log('onaddstream',pc);
+        document.getElementById('remoteVideo').srcObject = obj.stream;
+    }
+
+    pc.onicecandidate = function(e){
+        var cand = e.candidate;
+
+        //end if candidate is null (last candidate is!)
+        if(!cand) return;
+
+
+        if(!ice){
+            iceBuffer.push(cand);
+        }else{
+
+
+            //add ice candidates from buffer
+            for(var i = (iceBuffer.length - 1); i >= 0; i--){
+                pc.addIceCandidate(iceBuffer[i]);
+                iceBuffer.splice(i, 1);
+            }
+        }
+
+        var msg = {
+            type: 'icecandidate',
+            to: partner,
+            candidate: e.candidate
+        }
+
+        message(partner, msg);
+    }
 }
+
+
+function handleIceCandidate(msg){
+    //end if candidate is null (last candidate is!)
+    if(!msg.body.candidate) return;
+
+    var cand = new RTCIceCandidate(msg.body.candidate);
+
+    if(!ice){
+        iceBuffer.push(cand);
+    }else{
+        pc.addIceCandidate(cand);
+
+        //add ice candidates from buffer
+        for(var i = (iceBuffer.length - 1); i >= 0; i--){
+            pc.addIceCandidate(iceBuffer[i]);
+            iceBuffer.splice(i, 1);
+        }
+    }
+}
+
+
+function invite(p){
+    partner = p;
+
+    createPC();
+
+    navigator.mediaDevices.getUserMedia(constraints).then(function(stream){
+        //pc.onaddstream({stream: stream});
+        document.getElementById('localVideo').srcObject = stream;
+        pc.addStream(stream);
+
+        pc.createOffer({
+            offerToReceiveAudio: 1,
+            offerToReceiveVideo: 1
+        }).then(function(offer){
+            pc.setLocalDescription(new RTCSessionDescription(offer), function(){
+                var msg = {
+                    type: 'invitation',
+                    offer: offer,
+                    to: partner
+                }
+                message(partner, msg);
+            })
+        });
+    });
+
+
+
+
+}
+
+
+function handleInvite(msg){
+    console.log('got invite from', msg.from);
+    partner = msg.from;
+
+    createPC();
+
+    var offer = msg.body.offer;
+
+    console.log('received offer', offer);
+
+    navigator.mediaDevices.getUserMedia(constraints).then(function(stream){
+        //pc.onaddstream({stream: stream});
+        document.getElementById('localVideo').srcObject = stream;
+        pc.addStream(stream);
+
+        pc.setRemoteDescription(new RTCSessionDescription(offer), function(){
+            pc.createAnswer().then(function(answer){
+                pc.setLocalDescription(new RTCSessionDescription(answer), function(){
+                    var send = {
+                        type: 'accepted',
+                        to: partner,
+                        answer: answer
+                    }
+                    message(partner, send);
+
+                    ice = true;
+
+                    //add ice candidates from buffer
+                    for(var i = (iceBuffer.length - 1); i >= 0; i--){
+                        pc.addIceCandidate(iceBuffer[i]);
+                        iceBuffer.splice(i, 1);
+                    }
+                });
+            });
+        });
+    });
+}
+
+
+
+function handleAccepted(msg){
+    var answer = msg.body.answer;
+    console.log('received answer', answer);
+    pc.setRemoteDescription(new RTCSessionDescription(answer), function(){
+        ice = true;
+
+        //add ice candidates from buffer
+        for(var i = (iceBuffer.length - 1); i >= 0; i--){
+            pc.addIceCandidate(iceBuffer[i]);
+            iceBuffer.splice(i, 1);
+        }
+    });
+}
+
+
 
 
 
 function login(name){
     //set name globally
-    myName = name;
+    me = name;
+    document.getElementById('myName').innerHTML = me;
 
     console.log('logging in as', name);
 
@@ -38,26 +193,19 @@ function login(name){
     conn.send(JSON.stringify(msg));
 }
 
+
 function message(to, body){
     var msg = {
         id: uid(30),
         type: 'message',
-        from: myName,
+        from: me,
         to: to,
         body: body
     }
-    console.log(msg);
+    console.log('sending', msg);
     conn.send(JSON.stringify(msg));
 }
 
-
-
-function invite(partner){
-    var msg = {
-        type: 'invitation'
-    }
-    message(partner, msg);
-}
 
 
 
@@ -74,12 +222,22 @@ function uid(len) {
 };
 </script>
 
-<input type="button" value="invite alice" onClick="invite('alice')">
-<input type="button" value="invite bob" onClick="invite('bob')"><br>
+<div style="float: right">
+    <strong>Logged in as: </strong><br><span id="myName"></span>
+</div>
 
+<h3>Login</h3>
+<input type="button" value="Alice" onClick="login('alice')">
+<input type="button" value="Bob" onClick="login('bob')"><br>
 
-<input type="button" value="login as alice" onClick="login('alice')">
-<input type="button" value="login as bob" onClick="login('bob')"><br>
+<h3>Invite</h3>
+<input type="button" value="Alice" onClick="invite('alice')">
+<input type="button" value="Bob" onClick="invite('bob')"><br>
+
+<hr>
+
+<video id="localVideo" autoplay style="width: 300px; float: left; margin-right: 20px; border: 1px solid grey;"></video>
+<video id="remoteVideo" autoplay style="width: 300px; border: 1px solid grey;"></video>
 
 </body>
 </html>
