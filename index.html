@@ -1,0 +1,85 @@
+<html>
+<head>
+<title>WebRTC Minimal Example</title>
+
+<script src="node_modules/webrtc-adapter-test/adapter.js"></script>
+</head>
+
+<body>
+<script>
+var myName = null;
+
+var conn = new WebSocket('ws://10.26.180.210:1337');
+
+//handler for incoming messages
+conn.onmessage = function(msg){
+    var data = JSON.parse(msg.data);
+    switch(data.body.type){
+        case 'invitation': handleInvite(data.from); break;
+    }
+}
+
+function handleInvite(from){
+    console.log('got invite from', from);
+}
+
+
+
+function login(name){
+    //set name globally
+    myName = name;
+
+    console.log('logging in as', name);
+
+    var msg = {
+        type: 'login',
+        from: name
+    }
+    conn.send(JSON.stringify(msg));
+}
+
+function message(to, body){
+    var msg = {
+        id: uid(30),
+        type: 'message',
+        from: myName,
+        to: to,
+        body: body
+    }
+    console.log(msg);
+    conn.send(JSON.stringify(msg));
+}
+
+
+
+function invite(partner){
+    var msg = {
+        type: 'invitation'
+    }
+    message(partner, msg);
+}
+
+
+
+function uid(len) {
+    var buffer = [];
+    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+    for (var i = 0; i < len; ++i) {
+        var rand = Math.floor(Math.random() * (chars.length + 1));
+        buffer.push(chars[rand]);
+    }
+
+    return buffer.join('');
+};
+</script>
+
+<input type="button" value="invite alice" onClick="invite('alice')">
+<input type="button" value="invite bob" onClick="invite('bob')"><br>
+
+
+<input type="button" value="login as alice" onClick="login('alice')">
+<input type="button" value="login as bob" onClick="login('bob')"><br>
+
+</body>
+</html>
