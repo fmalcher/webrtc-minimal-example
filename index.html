@@ -19,7 +19,7 @@ var constraints = {
     video: true
 };
 
-var conn = new WebSocket('ws://10.26.6.50:1337');
+var conn = new WebSocket('wss://192.168.1.200:1337');
 
 //handler for incoming messages
 conn.onmessage = function(msg){
@@ -220,22 +220,52 @@ function uid(len) {
 };
 </script>
 
+<style type="text/css">
+body{
+    font-size: 24pt;
+}
+</style>
+
+
 <div style="float: right">
-    <strong>Logged in as: </strong><br><span id="myName"></span>
+    <strong>Logged in as: </strong><span id="myName"></span>
 </div>
 
-<h3>Login</h3>
-<input type="button" value="Alice" onClick="login('alice')">
-<input type="button" value="Bob" onClick="login('bob')"><br>
 
-<h3>Invite</h3>
-<input type="button" value="Alice" onClick="invite('alice')">
-<input type="button" value="Bob" onClick="invite('bob')"><br>
+<table border="1" cellspacing="0" cellpadding="5" style="width: 300px; font-size:24pt">
+    <tr>
+        <td></td>
+        <td>
+            <b>Alice</b>
+        </td>
+        <td>
+            <b>Bob</b>
+        </td>
+    </tr>
+    <tr>
+        <td><b>Login</b></td>
+        <td>
+            <a href="javascript:void(0);" onClick="login('alice')">Alice</a>
+        </td>
+        <td>
+            <a href="javascript:void(0);" onClick="login('bob')">Bob</a>
+        </td>
+    </tr>
+    <tr>
+        <td><b>Invite</b></td>
+        <td>
+            <a href="javascript:void(0);" onClick="invite('alice')">Alice</a>
+        </td>
+        <td>
+            <a href="javascript:void(0);" onClick="invite('bob')">Bob</a>
+        </td>
+    </tr>
+</table>
 
 <hr>
 
-<video id="localVideo" autoplay style="width: 300px; float: left; margin-right: 20px; border: 1px solid grey;"></video>
-<video id="remoteVideo" autoplay style="width: 300px; border: 1px solid grey;"></video>
+<video id="remoteVideo" autoplay style="width: 500px; float: left; margin-right: 20px; border: 1px solid grey;"></video>
+<video id="localVideo" autoplay style="width: 200px; border: 1px solid grey;"></video>
 
 </body>
 </html>
