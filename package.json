@@ -1,0 +1,26 @@
+{
+  "name": "webrtc-minimal-example",
+  "version": "1.0.0",
+  "description": "This is a very basic example for audio/video communication between two browsers. It shall demonstrate how the WebRTC API works.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "webrtc-adapter-test": "^0.2.10"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ferdinand Malcher",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fmalcher/webrtc-minimal-example.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fmalcher/webrtc-minimal-example/issues"
+  },
+  "homepage": "https://github.com/fmalcher/webrtc-minimal-example#readme"
+}
