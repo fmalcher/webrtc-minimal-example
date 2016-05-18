@@ -51,7 +51,11 @@ node server.js
 ```
 
 Open your Browser and go to `http://127.0.0.1:5555/`. You will see an error like in this picture after hitting F12.
-![Image of an error](https://github.com/fmalcher/webrtc-minimal-example/pic/error.png)
+![Image of an error](error.png)
 
-Go ahead and open this URL in a new tab: `https://127.0.0.1:1338/` and confirm the security exception. Don't worry, in this case it is local connection to your own computer.
+Go ahead and open this URL in a new tab: `https://127.0.0.1:1338/` and confirm the security exception.
+![Image of an error](sec.png)
+
+
+Don't worry, in this case it is local connection to your own computer.
 The page will try to load but nothing will happen so close it. Reload the tab `http://127.0.0.1:5555/` again (F5). Then open another tab and type the same URL in. The rest is too simple to explain it.
