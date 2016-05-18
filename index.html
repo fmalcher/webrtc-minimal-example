@@ -19,7 +19,7 @@ var constraints = {
     video: true
 };
 
-var conn = new WebSocket('wss://192.168.1.200:1337');
+var conn = new WebSocket('wss://127.0.0.1:1337');
 
 //handler for incoming messages
 conn.onmessage = function(msg){
