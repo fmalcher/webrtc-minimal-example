@@ -11,48 +11,50 @@ var me = null;
 var partner = null;
 var pc = null;
 
-var ice = false; //Do we already transmit ICE candidates?
+var ice = false; // Do we already transmit ICE candidates?
 var iceBuffer = [];
 
 var constraints = {
-    audio: false,
+    audio: true,
     video: true
 };
 
-var conn = new WebSocket('wss://127.0.0.1:1337');
+// websocket connection
+var conn = new WebSocket('wss://192.168.179.36:1337');
 
-//handler for incoming messages
-conn.onmessage = function(msg){
+
+// handler for all incoming messages
+conn.onmessage = msg => {
     var data = JSON.parse(msg.data);
 
     switch(data.body.type){
-        case 'invitation': handleInvite(data); break;
-        case 'accepted': handleAccepted(data); break;
+        case 'invitation':   handleInvite(data); break;
+        case 'accepted':     handleAccepted(data); break;
         case 'icecandidate': handleIceCandidate(data); break;
     }
 }
 
-//create a peer connection with its event handlers
-function createPC(){
+// create a peer connection with its event handlers
+function createPC() {
     pc = new RTCPeerConnection();
 
-    //event handler for when remote stream is added to peer connection
-    pc.onaddstream = function(obj){
+    // event handler for when remote stream is added to peer connection
+    pc.onaddstream = obj => {
         console.log('onaddstream', pc);
         document.getElementById('remoteVideo').srcObject = obj.stream;
     }
 
-    //event handler for when local ice candidate has been found
-    pc.onicecandidate = function(e){
-        var cand = e.candidate;
+    // event handler for when local ICE candidate has been found
+    pc.onicecandidate = e => {
+        let cand = e.candidate;
 
-        //end if candidate is null (last candidate is!)
+        // end if candidate is null (last candidate is!)
         if(!cand) return;
 
-        //if ice not enabled yet, push to buffer first
-        if(!ice){
+        // if ICE not enabled yet, push to buffer first
+        if(!ice) {
             iceBuffer.push(cand);
-        }else{
+        } else {
             sendIceCandidate(cand);
         }
 
@@ -60,61 +62,61 @@ function createPC(){
     }
 }
 
-//send all ICE candidates from buffer to partner
-function emptyIceBuffer(){
+// send all ICE candidates from buffer to partner
+function emptyIceBuffer() {
     ice = true;
 
-    //send ice candidates from buffer
-    for(var i = (iceBuffer.length - 1); i >= 0; i--){
+    // send ice candidates from buffer
+    for(var i = (iceBuffer.length - 1); i >= 0; i--) {
         sendIceCandidate(iceBuffer[i]);
         iceBuffer.splice(i, 1);
     }
 }
 
-//send one ICE candidate to partner
-function sendIceCandidate(cand){
+// send one ICE candidate to partner
+function sendIceCandidate(cand) {
     var msg = {
         type: 'icecandidate',
         to: partner,
         candidate: cand
     }
 
-    message(partner, msg);
+    sendMessage(partner, msg);
 }
 
-//handler for received ICE candidate from partner
-function handleIceCandidate(msg){
-    var cand = new RTCIceCandidate(msg.body.candidate);
-
+// handler for received ICE candidate from partner
+function handleIceCandidate(msg) {
+    let cand = new RTCIceCandidate(msg.body.candidate);
     pc.addIceCandidate(cand);
 }
 
 
-//Alice: invite a partner p (Bob) to a call
-function invite(p){
-    //write partner to global var
+// Alice: invite a partner p (Bob) to a call
+function invite(p) {
+    // write partner to global var
     partner = p;
 
     createPC();
 
-    navigator.mediaDevices.getUserMedia(constraints).then(function(stream){
-        document.getElementById('localVideo').srcObject = stream;
-        pc.addStream(stream);
+    navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+        .then(stream => {
+            document.getElementById('localVideo').srcObject = stream;
+            pc.addStream(stream);
 
-        pc.createOffer({
-            offerToReceiveAudio: 1,
-            offerToReceiveVideo: 1
-        }).then(function(offer){
-            pc.setLocalDescription(new RTCSessionDescription(offer), function(){
-                var msg = {
-                    type: 'invitation',
-                    offer: offer,
-                    to: partner
-                }
-                message(partner, msg);
-            })
+            pc.createOffer({
+                offerToReceiveAudio: 1,
+                offerToReceiveVideo: 1
+            }).then(offer => {
+                pc.setLocalDescription(new RTCSessionDescription(offer), () => {
+                    var msg = {
+                        type: 'invitation',
+                        offer: offer,
+                        to: partner
+                    }
+                    sendMessage(partner, msg);
+                })
+            });
         });
-    });
 
 
 
@@ -122,53 +124,52 @@ function invite(p){
 }
 
 
-//Bob: handle incoming invite from Alice
-function handleInvite(msg){
+// Bob: handle incoming invite from Alice
+function handleInvite(msg) {
     console.log('got invite from', msg.from);
     partner = msg.from;
 
-    //confirmation dialog
+    // confirmation dialog
     if(!confirm('Incoming call from ' + msg.from + '. Answer?')) return;
 
     createPC();
 
     var offer = msg.body.offer;
-
     console.log('received offer', offer);
 
 
 
-    navigator.mediaDevices.getUserMedia(constraints).then(function(stream){
-        //pc.onaddstream({stream: stream});
-        document.getElementById('localVideo').srcObject = stream;
-        pc.addStream(stream);
+    navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+        .then(stream => {
+            document.getElementById('localVideo').srcObject = stream;
+            pc.addStream(stream);
 
-        pc.setRemoteDescription(new RTCSessionDescription(offer), function(){
-            pc.createAnswer().then(function(answer){
-                pc.setLocalDescription(new RTCSessionDescription(answer), function(){
-                    var send = {
-                        type: 'accepted',
-                        to: partner,
-                        answer: answer
-                    }
-                    message(partner, send);
+            pc.setRemoteDescription(new RTCSessionDescription(offer), () => {
+                pc.createAnswer().then(answer => {
+                    pc.setLocalDescription(new RTCSessionDescription(answer), () => {
+                        var send = {
+                            type: 'accepted',
+                            to: partner,
+                            answer: answer
+                        }
+                        sendMessage(partner, send);
 
-                    //send all ice candidates
-                    emptyIceBuffer();
+                        // send all ice candidates
+                        emptyIceBuffer();
+                    });
                 });
             });
         });
-    });
 }
 
 
-//Alice: handle accepted call from Bob
-function handleAccepted(msg){
+// Alice: handle accepted call from Bob
+function handleAccepted(msg) {
     var answer = msg.body.answer;
     console.log('received answer', answer);
-    pc.setRemoteDescription(new RTCSessionDescription(answer), function(){
 
-        //send all ice candidates
+    pc.setRemoteDescription(new RTCSessionDescription(answer), () => {
+        // send all ice candidates
         emptyIceBuffer();
     });
 }
@@ -176,9 +177,9 @@ function handleAccepted(msg){
 
 
 
-//login with user name
-function login(name){
-    //set name globally
+// login with user name
+function login(name) {
+    // set name globally
     me = name;
     document.getElementById('myName').innerHTML = me;
 
@@ -191,8 +192,8 @@ function login(name){
     conn.send(JSON.stringify(msg));
 }
 
-//send Websocket message
-function message(to, body){
+// send Websocket message
+function sendMessage(to, body) {
     var msg = {
         id: uid(30),
         type: 'message',
@@ -206,7 +207,7 @@ function message(to, body){
 
 
 
-//generate random string
+// generate random string
 function uid(len) {
     var buffer = [];
     var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -264,8 +265,8 @@ body{
 
 <hr>
 
-<video id="remoteVideo" autoplay style="width: 500px; float: left; margin-right: 20px; border: 1px solid grey;"></video>
-<video id="localVideo" autoplay style="width: 200px; border: 1px solid grey;"></video>
+<video id="remoteVideo" autoplay controls style="width: 500px; float: left; margin-right: 20px; border: 1px solid grey;"></video>
+<video id="localVideo" autoplay controls style="width: 200px; border: 1px solid grey;"></video>
 
 </body>
 </html>
