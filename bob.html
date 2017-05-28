@@ -1,0 +1,210 @@
+<html>
+<head>
+<title>WebRTC Minimal Example</title>
+
+<script src="node_modules/webrtc-adapter/out/adapter.js"></script>
+<script src="helpers.js"></script>
+</head>
+
+<body>
+<script>
+var me = null;
+var partner = null;
+var pc = null;
+
+var iceActive = false; // Do we already transmit ICE candidates?
+var iceBuffer = [];
+
+
+// websocket connection
+var conn = new WebSocket('wss://192.168.179.36:1337');
+
+
+// handler for all incoming messages
+conn.onmessage = msg => {
+    var data = JSON.parse(msg.data);
+
+    switch(data.body.type){
+        case 'invitation':   handleInvite(data); break;
+        case 'accepted':     handleAccepted(data); break;
+        case 'icecandidate': handleIceCandidate(data); break;
+    }
+}
+
+// create a peer connection with its event handlers
+function createPC() {
+    pc = new RTCPeerConnection();
+
+    // event handler for when remote stream is added to peer connection
+    pc.onaddstream = obj => {
+        console.log('onaddstream', pc);
+        document.getElementById('remoteVideo').srcObject = obj.stream;
+    }
+
+    // event handler for when local ICE candidate has been found
+    pc.onicecandidate = e => {
+        let cand = e.candidate;
+
+        // end if candidate is null (last candidate is!)
+        if(!cand) return;
+
+        // if ICE not enabled yet, push to buffer first
+        if(!iceActive) {
+            iceBuffer.push(cand);
+        } else {
+            sendIceCandidate(cand);
+        }
+
+
+    }
+}
+
+
+function closePC() {
+    pc.close();
+}
+
+
+
+// send all ICE candidates from buffer to partner
+function emptyIceBuffer() {
+    iceActive = true;
+
+    // send ice candidates from buffer
+    for(var i = (iceBuffer.length - 1); i >= 0; i--) {
+        sendIceCandidate(iceBuffer[i]);
+        iceBuffer.splice(i, 1);
+    }
+}
+
+// send one ICE candidate to partner
+function sendIceCandidate(cand) {
+    var msg = {
+        type: 'icecandidate',
+        to: partner,
+        candidate: cand
+    }
+
+    sendMessage(partner, msg);
+}
+
+// handler for received ICE candidate from partner
+function handleIceCandidate(msg) {
+    let cand = new RTCIceCandidate(msg.body.candidate);
+    pc.addIceCandidate(cand);
+}
+
+
+// Alice: invite a partner p (Bob) to a call
+function invite(p) {
+    // write partner to global var
+    partner = p;
+
+    createPC();
+
+    navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+        .then(stream => {
+            document.getElementById('localVideo').srcObject = stream;
+            pc.addStream(stream);
+
+            pc.createOffer({
+                offerToReceiveAudio: 1,
+                offerToReceiveVideo: 1
+            }).then(offer => {
+                pc.setLocalDescription(new RTCSessionDescription(offer), () => {
+                    var msg = {
+                        type: 'invitation',
+                        offer: offer,
+                        to: partner
+                    }
+                    sendMessage(partner, msg);
+                })
+            });
+        });
+
+
+
+
+}
+
+
+// Bob: handle incoming invite from Alice
+function handleInvite(msg) {
+    console.log('got invite from', msg.from);
+    partner = msg.from;
+
+    // confirmation dialog
+    if(!confirm('Incoming call from ' + msg.from + '. Answer?')) return;
+
+    createPC();
+
+    var offer = msg.body.offer;
+    console.log('received offer', offer);
+
+
+
+    navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+        .then(stream => {
+            document.getElementById('localVideo').srcObject = stream;
+            pc.addStream(stream);
+
+            pc.setRemoteDescription(new RTCSessionDescription(offer), () => {
+                pc.createAnswer().then(answer => {
+                    pc.setLocalDescription(new RTCSessionDescription(answer), () => {
+                        var send = {
+                            type: 'accepted',
+                            to: partner,
+                            answer: answer
+                        }
+                        sendMessage(partner, send);
+
+                        // send all ice candidates
+                        emptyIceBuffer();
+                    });
+                });
+            });
+        });
+}
+
+
+// Alice: handle accepted call from Bob
+function handleAccepted(msg) {
+    var answer = msg.body.answer;
+    console.log('received answer', answer);
+
+    pc.setRemoteDescription(new RTCSessionDescription(answer), () => {
+        // send all ice candidates
+        emptyIceBuffer();
+    });
+}
+
+
+
+
+// login with user name
+function login(name) {
+    console.log('logging in as', name);
+
+    var msg = {
+        type: 'login',
+        from: name
+    }
+    conn.send(JSON.stringify(msg));
+}
+
+
+
+
+
+</script>
+
+<h2>Bob</h2>
+<button onClick="login('bob')">Login</button>
+<button onClick="closePC()">Close Peer Connection</button>
+<hr>
+
+<video id="remoteVideo" autoplay controls style="width: 500px; float: left; margin-right: 20px; border: 1px solid grey;"></video>
+<video id="localVideo" autoplay controls style="width: 200px; border: 1px solid grey;"></video>
+
+</body>
+</html>
