@@ -22,7 +22,7 @@ var conn = new WebSocket(WEBSOCKET_URL);
 /*************************************/
 
 // create a peer connection
-var pc = new RTCPeerConnection();
+var pc = new RTCPeerConnection(RTCPC_CONFIG);
 
 // event handler for when remote stream is added to peer connection
 pc.onaddstream = obj => {

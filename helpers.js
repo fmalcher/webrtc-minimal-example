@@ -1,5 +1,10 @@
-const WEBSOCKET_URL = 'wss://10.125.4.200:1337'
-//const WEBSOCKET_URL = 'wss://192.168.179.36:1337'
+const WEBSOCKET_URL = 'wss://webrtc.malcher-server.de:1337'
+
+const RTCPC_CONFIG = {
+  'iceServers': [{
+    'url': 'stun:ice.malcher-server.de'
+  }]
+};
 
 /*************************************/
 
