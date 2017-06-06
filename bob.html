@@ -9,6 +9,7 @@ const me = 'bob';
 var partner;
 </script>
 
+<link rel="stylesheet" href="https://unpkg.com/bootstrap@3.3.7/dist/css/bootstrap.min.css">
 <script src="https://unpkg.com/webrtc-adapter@latest/out/adapter.js"></script>
 <script src="helpers.js"></script>
 
@@ -110,14 +111,15 @@ function handleIceCandidate(msg) {
 }
 </script>
 
-<h2>Bob</h2>
-<button onClick="login(me)">Login</button>
-<button onClick="closePC()">Close Peer Connection</button>
-<hr>
+<div class="container">
+    <h2>Bob</h2>
+    <button onClick="login(me)" class="btn btn-success btn-lg">Login</button>
+    <button onClick="closePC()" class="btn btn-danger btn-lg">Close Peer Connection</button>
+    <hr>
 
-<video id="remoteVideo" autoplay controls style="width: 500px; float: left; margin-right: 20px; border: 1px solid grey;"></video>
-<video id="localVideo" autoplay controls style="width: 200px; border: 1px solid grey;"></video>
-
+    <video id="remoteVideo" autoplay controls style="width: 500px; float: left; margin-right: 20px; border: 1px solid grey;"></video>
+    <video id="localVideo" autoplay controls style="width: 200px; border: 1px solid grey;"></video>
+</div>
 
 </body>
 </html>
