@@ -1,8 +1,9 @@
-const WEBSOCKET_URL = 'wss://webrtc.malcher-server.de:1337'
+const WEBSOCKET_URL = 'wss://hamfler.com:1337'
 
 const RTCPC_CONFIG = {
-  iceServers: [
-      {urls: 'stun:ice.malcher-server.de'}]
+    iceServers: [
+        {urls: 'stun:hamfler.com'}
+    ]
 };
 
 /*************************************/
