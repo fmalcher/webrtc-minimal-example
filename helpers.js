@@ -1,4 +1,4 @@
-const WEBSOCKET_URL = 'wss://hamfler.com:1337'
+const WEBSOCKET_URL = 'wss://msg.hamfler.com:1337'
 
 const RTCPC_CONFIG = {
     iceServers: [
