@@ -2,7 +2,7 @@ const WEBSOCKET_URL = 'wss://hamfler.com:1337'
 
 const RTCPC_CONFIG = {
     iceServers: [
-        {urls: 'stun:stun.l.google.com:19302'}
+        {urls: 'stun:hamfler.com:3478'}
     ]
 };
 
