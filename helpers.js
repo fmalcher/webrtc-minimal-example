@@ -6,6 +6,21 @@ const RTCPC_CONFIG = {
     ]
 };
 
+//const RTCP_CONFIG_A = RTCPC_CONFIG;
+//const RTCP_CONFIG_B = RTCPC_CONFIG;
+
+const RTCPC_CONFIG_A = {
+    iceServers: [
+        {urls: 'stun:stun.l.google.com:19302'}
+    ]
+};
+
+const RTCPC_CONFIG_B = {
+    iceServers: [
+        {urls: 'stun:hamfler.com:3478'}
+    ]
+};
+
 /*************************************/
 
 
