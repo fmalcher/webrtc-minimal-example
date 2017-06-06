@@ -7,7 +7,6 @@
     "test": "test"
   },
   "dependencies": {
-    "webrtc-adapter": "*"
   },
   "devDependencies": {},
   "scripts": {
