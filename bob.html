@@ -62,7 +62,7 @@ function closePC() {
 conn.onmessage = msg => {
     var data = JSON.parse(msg.data);
 
-    switch(data.body.type){
+    switch(data.body.type) {
         case 'invitation':   handleInvite(data); break;
         case 'icecandidate': handleIceCandidate(data); break;
     }
@@ -99,10 +99,10 @@ function handleInvite(msg) {
                         // send all ice candidates
                         emptyIceBuffer();
                     },
-			(e)=>{console.log(e)});
+                    e => console.log(e));
                 });
             },
-		(e)=>{console.log(e);});
+            e => console.log(e));
         });
 }
 

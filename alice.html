@@ -67,7 +67,7 @@ function invite(partner) {
                     }
                     sendMessage(partner, msg);
                 },
-		(e)=>{console.log(e);})
+                e => console.log(e));
             });
         });
 }
@@ -102,7 +102,7 @@ function handleAccepted(msg) {
         // send all ice candidates to Bob
         emptyIceBuffer();
     },
-    (e)=>{console.log(e);});
+    e => console.log(e));
 }
 
 
