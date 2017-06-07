@@ -86,9 +86,9 @@ function handleInvite(msg) {
             document.getElementById('localVideo').srcObject = stream;
             pc.addStream(stream);
 
-            pc.setRemoteDescription(new RTCSessionDescription(offer), () => {
+            pc.setRemoteDescription(offer, () => {
                 pc.createAnswer().then(answer => {
-                    pc.setLocalDescription(new RTCSessionDescription(answer), () => {
+                    pc.setLocalDescription(answer, () => {
                         let send = {
                             type: 'accepted',
                             to: partner,
@@ -98,9 +98,11 @@ function handleInvite(msg) {
 
                         // send all ice candidates
                         emptyIceBuffer();
-                    });
+                    },
+			(e)=>{console.log(e)});
                 });
-            });
+            },
+		(e)=>{console.log(e);});
         });
 }
 

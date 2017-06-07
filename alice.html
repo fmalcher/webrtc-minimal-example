@@ -55,15 +55,19 @@ function invite(partner) {
             document.getElementById('localVideo').srcObject = stream;
             pc.addStream(stream);
 
-            pc.createOffer().then(offer => {
-                pc.setLocalDescription(new RTCSessionDescription(offer), () => {
+            pc.createOffer({
+                offerToReceiveAudio: 1,
+                offerToReceiveVideo: 1
+            }).then(offer => {
+                pc.setLocalDescription(offer, () => {
                     let msg = {
                         type: 'invitation',
                         offer: offer,
                         to: partner
                     }
                     sendMessage(partner, msg);
-                })
+                },
+		(e)=>{console.log(e);})
             });
         });
 }
@@ -97,7 +101,8 @@ function handleAccepted(msg) {
     pc.setRemoteDescription(new RTCSessionDescription(answer), () => {
         // send all ice candidates to Bob
         emptyIceBuffer();
-    });
+    },
+    (e)=>{console.log(e);});
 }
 
 
