@@ -87,7 +87,10 @@ function handleInvite(msg) {
             pc.addStream(stream);
 
             pc.setRemoteDescription(offer, () => {
-                pc.createAnswer().then(answer => {
+                pc.createAnswer({
+                    offerToReceiveAudio: 1,
+                    offerToReceiveVideo: 1
+                }).then(answer => {
                     pc.setLocalDescription(answer, () => {
                         let send = {
                             type: 'accepted',
@@ -120,7 +123,7 @@ function handleIceCandidate(msg) {
     <hr>
 
     <video id="remoteVideo" autoplay controls style="width: 500px; float: left; margin-right: 20px; border: 1px solid grey;"></video>
-    <video id="localVideo" autoplay controls style="width: 200px; border: 1px solid grey;"></video>
+    <video id="localVideo" autoplay controls muted style="width: 200px; border: 1px solid grey;"></video>
 </div>
 
 </body>
