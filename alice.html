@@ -105,13 +105,6 @@ function handleAccepted(msg) {
     e => console.log(e));
 }
 
-
-// handler for received ICE candidate from partner
-function handleIceCandidate(msg) {
-    let cand = new RTCIceCandidate(msg.body.candidate);
-    pc.addIceCandidate(cand);
-}
-
 </script>
 
 <div class="container">
