@@ -2,13 +2,28 @@ const WEBSOCKET_URL = 'wss://msg.hamfler.com:1337'
 
 const RTCPC_CONFIG = {
     iceServers: [
-        {urls: 'stun:hamfler.com:3478'}
+        {urls: 'stun:hamfler.com:3478'},
+        {
+            url: 'turn:numb.viagenie.ca',
+            credential: 'muazkh',
+            username: 'webrtc@live.com'
+	},
+        {
+            url: 'turn:192.158.29.39:3478?transport=udp',
+            credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+            username: '28224511:1379330808'
+        },
+        {
+            url: 'turn:192.158.29.39:3478?transport=tcp',
+            credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+            username: '28224511:1379330808'
+        }
     ]
 };
 
-//const RTCP_CONFIG_A = RTCPC_CONFIG;
-//const RTCP_CONFIG_B = RTCPC_CONFIG;
-
+const RTCPC_CONFIG_A = RTCPC_CONFIG;
+const RTCPC_CONFIG_B = RTCPC_CONFIG;
+/*
 const RTCPC_CONFIG_A = {
     iceServers: [
         {urls: 'stun:stun.l.google.com:19302'}
@@ -20,7 +35,7 @@ const RTCPC_CONFIG_B = {
         {urls: 'stun:hamfler.com:3478'}
     ]
 };
-
+*/
 /*************************************/
 
 
