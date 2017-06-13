@@ -26,37 +26,15 @@ var conn = new WebSocket(WEBSOCKET_URL);
 var pc = new RTCPeerConnection(RTCPC_CONFIG_B);
 
 // event handler for when remote stream is added to peer connection
-pc.onaddstream = obj => {
-    console.log('onaddstream', pc);
-    document.getElementById('remoteVideo').srcObject = obj.stream;
-}
+pc.onaddstream = onAddStream;
 
 // event handler for when local ICE candidate has been found
-pc.onicecandidate = e => {
-    let cand = e.candidate;
+pc.onicecandidate = onIceCandidate;
 
-    // end if candidate is null (last candidate is!)
-    if(!cand) return;
-
-    // if ICE not enabled yet, push to buffer first
-    if(!iceActive) {
-        iceBuffer.push(cand);
-    } else {
-        sendIceCandidate(cand);
-    }
-}
-
-/*************************************/
-
-// close peer connection
-function closePC() {
-    pc.close();
-}
 
 /**************************************
 * Message handling
 **************************************/
-
 
 // handler for all incoming messages
 conn.onmessage = msg => {
@@ -67,7 +45,6 @@ conn.onmessage = msg => {
         case 'icecandidate': handleIceCandidate(data); break;
     }
 }
-
 
 // handle incoming invite from Alice
 function handleInvite(msg) {

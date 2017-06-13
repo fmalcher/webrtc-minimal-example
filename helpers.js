@@ -1,20 +1,21 @@
+// configuration
 const WEBSOCKET_URL = 'wss://msg.hamfler.com:1337'
 
 const RTCPC_CONFIG = {
     iceServers: [
         {urls: 'stun:hamfler.com:3478'},
         {
-            url: 'turn:numb.viagenie.ca',
+            urls: 'turn:numb.viagenie.ca',
             credential: 'muazkh',
             username: 'webrtc@live.com'
-	},
+        },
         {
-            url: 'turn:192.158.29.39:3478?transport=udp',
+            urls: 'turn:192.158.29.39:3478?transport=udp',
             credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
             username: '28224511:1379330808'
         },
         {
-            url: 'turn:192.158.29.39:3478?transport=tcp',
+            urls: 'turn:192.158.29.39:3478?transport=tcp',
             credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
             username: '28224511:1379330808'
         }
@@ -36,10 +37,30 @@ const RTCPC_CONFIG_B = {
     ]
 };
 */
+
 /*************************************/
+// events and functions
 
+// event handler for when remote stream is added to peer connection
+function onAddStream (obj) {
+    console.log('onaddstream', pc);
+    document.getElementById('remoteVideo').srcObject = obj.stream;
+}
 
+// event handler for when local ICE candidate has been found
+function onIceCandidate (c) {
+    let cand = c.candidate;
 
+    // end if candidate is null (last candidate is!)
+    if(!cand) return;
+
+    // if ICE is not enabled yet, push to buffer first
+    if(!iceActive) {
+        iceBuffer.push(cand);
+    } else {
+        sendIceCandidate(cand);
+    }
+}
 
 // send all ICE candidates from buffer to partner
 function emptyIceBuffer() {
@@ -69,6 +90,13 @@ function handleIceCandidate(msg) {
     pc.addIceCandidate(cand);
 }
 
+// close peer connection
+function closePC() {
+    pc.close();
+}
+
+/*************************************/
+// Messaging
 
 // login with user name
 function login(name) {
@@ -80,7 +108,6 @@ function login(name) {
     }
     conn.send(JSON.stringify(msg));
 }
-
 
 // send Websocket message
 function sendMessage(to, body) {
