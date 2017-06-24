@@ -1,0 +1,108 @@
+<html>
+<head>
+<title>WebRTC Minimal Example</title>
+</head>
+
+<body>
+<script>
+var me='hannes';
+var partner='danny';
+</script>
+
+<link rel="stylesheet" href="https://unpkg.com/bootstrap@3.3.7/dist/css/bootstrap.min.css">
+<script src="https://unpkg.com/webrtc-adapter@latest/out/adapter.js"></script>
+<script src="helpers2.js"></script>
+
+<script>
+var iceActive = false; // Do we already transmit ICE candidates?
+var iceBuffer = [];
+
+// websocket connection
+var conn = new WebSocket(WEBSOCKET_URL);
+
+/*************************************/
+
+// create a peer connection
+var pc = new RTCPeerConnection(RTCPC_CONFIG_A);
+
+// event handler for when remote stream is added to peer connection
+pc.onaddstream = onAddStream;
+
+// event handler for when local ICE candidate has been found
+pc.onicecandidate = onIceCandidate;
+
+
+/**************************************
+* Message handling
+**************************************/
+
+// invite a partner to a call
+function invite(p) {
+    partner = document.getElementById('partner').value;
+    navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+        .then(stream => {
+            document.getElementById('localVideo').srcObject = stream;
+            pc.addStream(stream);
+
+            pc.createOffer({
+                offerToReceiveAudio: 1,
+                offerToReceiveVideo: 1
+            }).then(offer => {
+                pc.setLocalDescription(offer, () => {
+                    let msg = {
+                        type: 'invitation',
+                        offer: offer,
+                        to: partner
+                    }
+                    sendMessage(partner, msg);
+                },
+                e => console.log(e));
+            });
+        });
+}
+
+
+/**************************************
+* Message handling
+**************************************/
+
+// handler for all incoming messages
+conn.onmessage = msg => {
+    var data = JSON.parse(msg.data);
+
+    switch(data.body.type){
+        case 'accepted':     handleAccepted(data); break;
+        case 'icecandidate': handleIceCandidate(data); break;
+    }
+}
+
+
+// handler for accepted call from partner
+function handleAccepted(msg) {
+    let answer = msg.body.answer;
+    console.log('received answer', answer);
+
+    pc.setRemoteDescription(new RTCSessionDescription(answer), () => {
+        // send all ice candidates to partner
+        emptyIceBuffer();
+    },
+    e => console.log(e));
+}
+
+</script>
+
+<div class="container">
+    <h2>Anrufer</h2>
+    <label for="usr">Ich:<input type="text" class="form-control" id="me" value="hannes"></label> 
+    <label for="usr">Kommunikationspartner:<input type="text" class="form-control" id="partner" value="danny"></label> 
+    <button onClick="login(me)" class="btn btn-success btn-lg">Login</button>
+    <button onClick="invite(partner)" class="btn btn-primary btn-lg">Invite</button>
+    <button onClick="closePC()" class="btn btn-danger btn-lg">Close Peer Connection</button>
+    <hr>
+
+    <video id="remoteVideo" autoplay controls style="width: 500px; float: left; margin-right: 20px; border: 1px solid grey;"></video>
+    <video id="localVideo" autoplay controls muted style="width: 200px; border: 1px solid grey;"></video>
+</div>
+
+</body>
+</html>
