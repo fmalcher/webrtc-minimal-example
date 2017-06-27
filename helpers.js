@@ -1,7 +1,7 @@
 // configuration
-const WEBSOCKET_URL = 'wss://msg.hamfler.com:1337'
+const WEBSOCKET_URL = 'wss://192.168.10.200:1337'
 
-const RTCPC_CONFIG = {
+/*const RTCPC_CONFIG = {
     iceServers: [
         {urls: 'stun:hamfler.com:3478'},
         {
@@ -20,20 +20,21 @@ const RTCPC_CONFIG = {
             username: '28224511:1379330808'
         }
     ]
-};
+};*/
+const RTCPC_CONFIG = {};
 
 const RTCPC_CONFIG_A = RTCPC_CONFIG;
 const RTCPC_CONFIG_B = RTCPC_CONFIG;
 /*
 const RTCPC_CONFIG_A = {
     iceServers: [
-        {urls: 'stun:stun.l.google.com:19302'}
+        //{urls: 'stun:stun.l.google.com:19302'}
     ]
 };
 
 const RTCPC_CONFIG_B = {
     iceServers: [
-        {urls: 'stun:hamfler.com:3478'}
+        //{urls: 'stun:hamfler.com:3478'}
     ]
 };
 */
