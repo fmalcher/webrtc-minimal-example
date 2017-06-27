@@ -7,9 +7,11 @@
     "test": "test"
   },
   "dependencies": {
+    "http-server": "^0.10.0"
   },
   "devDependencies": {},
   "scripts": {
+    "start": "http-server -S -K key.pem -C cert.pem -p 8080",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Ferdinand Malcher",
